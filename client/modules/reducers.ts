@@ -1,7 +1,7 @@
 import { combineReducers } from "redux";
 import { getType, StateType } from "typesafe-actions";
 import { Actions, actions } from "./actions";
-import { GraphHistory, History, Mocks, Sessions, SmockerError } from "./types";
+import { GraphHistory, Mocks, Sessions, SmockerError } from "./types";
 
 const loadingSessions = (state = false, action: Actions) => {
   const {
@@ -151,57 +151,6 @@ const sessions = combineReducers({
   selected: selectedSession,
 });
 
-const loadingHistory = (state = false, action: Actions) => {
-  const { fetchHistory, summarizeHistory, reset } = actions;
-  switch (action.type) {
-    case getType(fetchHistory.request):
-    case getType(summarizeHistory.request):
-    case getType(reset.request): {
-      return true;
-    }
-    case getType(fetchHistory.success):
-    case getType(fetchHistory.failure):
-    case getType(summarizeHistory.success):
-    case getType(summarizeHistory.failure):
-    case getType(reset.success):
-    case getType(reset.failure): {
-      return false;
-    }
-    default:
-      return state;
-  }
-};
-
-const entryList = (state: History = [], action: Actions) => {
-  const { fetchHistory, reset } = actions;
-  switch (action.type) {
-    case getType(reset.success): {
-      return [];
-    }
-    case getType(fetchHistory.success): {
-      return action.payload;
-    }
-    default:
-      return state;
-  }
-};
-
-const entryError = (state: SmockerError | null = null, action: Actions) => {
-  const { fetchHistory, reset } = actions;
-  switch (action.type) {
-    case getType(fetchHistory.failure):
-    case getType(reset.failure): {
-      return action.payload;
-    }
-    case getType(fetchHistory.success):
-    case getType(reset.success): {
-      return null;
-    }
-    default:
-      return state;
-  }
-};
-
 const historyGraph = (state: GraphHistory = [], action: Actions) => {
   const { summarizeHistory, reset } = actions;
   switch (action.type) {
@@ -218,9 +167,6 @@ const historyGraph = (state: GraphHistory = [], action: Actions) => {
 };
 
 const history = combineReducers({
-  loading: loadingHistory,
-  list: entryList,
-  error: entryError,
   graph: historyGraph,
 });
 

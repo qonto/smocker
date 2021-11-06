@@ -38,12 +38,6 @@ const openMockEditor = createAction("@APP/MOCKEDITOR/OPEN")<
   [boolean, string]
 >();
 
-const fetchHistory = createAsyncAction(
-  "@APP/HISTORY/FETCH",
-  "@APP/HISTORY/FETCH/SUCCESS",
-  "@APP/HISTORY/FETCH/FAILURE"
-)<string, History, SmockerError>();
-
 const summarizeHistory = createAsyncAction(
   "@APP/HISTORY/SUMMARIZE",
   "@APP/HISTORY/SUMMARIZE/SUCCESS",
@@ -95,7 +89,6 @@ export const actions = {
   selectSession,
   openMockEditor,
   uploadSessions,
-  fetchHistory,
   summarizeHistory,
   fetchMocks,
   addMocks,

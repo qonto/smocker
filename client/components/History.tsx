@@ -1,9 +1,4 @@
-import {
-  PartitionOutlined,
-  PauseCircleFilled,
-  PlayCircleFilled,
-  PlusCircleOutlined,
-} from "@ant-design/icons";
+import { PartitionOutlined, PlusCircleOutlined } from "@ant-design/icons";
 import {
   Alert,
   Button,
@@ -26,16 +21,16 @@ import useLocalStorage from "react-use-localstorage";
 import { Dispatch } from "redux";
 import { Actions, actions } from "../modules/actions";
 import { AppState } from "../modules/reducers";
-import { dateFormat, Entry, History, SmockerError } from "../modules/types";
+import { dateFormat, Entry, SmockerError } from "../modules/types";
 import {
   cleanupRequest,
   cleanupResponse,
   entryToCurl,
   formatQueryParams,
-  usePoll,
 } from "../modules/utils";
 import Code from "./Code";
 import "./History.scss";
+import { useHistory } from "../api/api";
 
 const TableRow = ([key, values]: [string, string[]]) => (
   <tr key={key}>
@@ -167,23 +162,10 @@ EntryComponent.displayName = "Entry";
 
 interface Props {
   sessionID: string;
-  loading: boolean;
-  canPoll: boolean;
-  historyEntries: History;
-  error: SmockerError | null;
-  fetch: (sessionID: string) => unknown;
   setDisplayNewMock: (display: boolean, defaultValue: string) => unknown;
 }
 
-const HistoryComponent = ({
-  sessionID,
-  historyEntries,
-  loading,
-  canPoll,
-  error,
-  fetch,
-  setDisplayNewMock,
-}: Props) => {
+const HistoryComponent = ({ sessionID, setDisplayNewMock }: Props) => {
   React.useEffect(() => {
     document.title = "History | Smocker";
   });
@@ -200,7 +182,7 @@ const HistoryComponent = ({
   const minPageSize = 10;
   const [page, setPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(minPageSize);
-  const [polling, togglePolling] = usePoll(10000, fetch, sessionID);
+  const { isLoading, error, data: historyEntries } = useHistory(sessionID);
 
   const ref = React.createRef<HTMLDivElement>();
   React.useLayoutEffect(() => {
@@ -271,7 +253,7 @@ const HistoryComponent = ({
             />
           </div>
           <Spin
-            spinning={loading}
+            spinning={isLoading}
             className={filteredEntries.length <= minPageSize ? "absolute" : ""}
           />
         </Row>
@@ -324,16 +306,6 @@ const HistoryComponent = ({
                 Visualize
               </Button>
             </Link>
-            {canPoll && (
-              <Button
-                loading={loading}
-                onClick={togglePolling}
-                danger={polling}
-                icon={polling ? <PauseCircleFilled /> : <PlayCircleFilled />}
-              >
-                Autorefresh
-              </Button>
-            )}
           </div>
         }
       >
@@ -368,7 +340,7 @@ const HistoryComponent = ({
           </Select>
           .
         </p>
-        <Spin delay={300} spinning={loading && historyEntries.length === 0}>
+        <Spin delay={300} spinning={isLoading && historyEntries?.length === 0}>
           {body}
         </Spin>
       </PageHeader>
@@ -378,22 +350,12 @@ const HistoryComponent = ({
 
 export default connect(
   (state: AppState) => {
-    const { sessions, history } = state;
-    const canPoll =
-      !sessions.selected ||
-      (sessions.list &&
-        sessions.selected === sessions.list[sessions.list.length - 1].id);
+    const { sessions } = state;
     return {
       sessionID: sessions.selected,
-      loading: history.loading,
-      historyEntries: history.list,
-      error: history.error,
-      canPoll,
     };
   },
   (dispatch: Dispatch<Actions>) => ({
-    fetch: (sessionID: string) =>
-      dispatch(actions.fetchHistory.request(sessionID)),
     setDisplayNewMock: (display: boolean, defaultValue: string) =>
       dispatch(actions.openMockEditor([display, defaultValue])),
   })

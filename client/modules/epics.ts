@@ -8,7 +8,6 @@ import { Actions, actions } from "./actions";
 import {
   decode,
   GraphHistoryCodec,
-  HistoryCodec,
   MocksCodec,
   SessionCodec,
   SessionsCodec,
@@ -20,7 +19,6 @@ const {
   newSession,
   updateSession,
   uploadSessions,
-  fetchHistory,
   summarizeHistory,
   fetchMocks,
   addMocks,
@@ -109,22 +107,6 @@ const uploadSessionsEpic: Epic<Actions> = (action$) =>
           catchError((error) => of(uploadSessions.failure(extractError(error))))
         )
     )
-  );
-
-const fetchHistoryEpic: Epic<Actions> = (action$) =>
-  action$.pipe(
-    filter(isActionOf(fetchHistory.request)),
-    exhaustMap((action) => {
-      const query = action.payload ? `?session=${action.payload}` : "";
-      return ajax.get(`${trimedPath}/history${query}`).pipe(
-        mergeMap(({ response }) =>
-          decode(HistoryCodec)(response).pipe(
-            map((resp) => fetchHistory.success(resp))
-          )
-        ),
-        catchError((error) => of(fetchHistory.failure(extractError(error))))
-      );
-    })
   );
 
 const summarizeHistoryEpic: Epic<Actions> = (action$) =>
@@ -232,7 +214,6 @@ export default combineEpics(
   newSessionEpic,
   updateSessionEpic,
   uploadSessionsEpic,
-  fetchHistoryEpic,
   summarizeHistoryEpic,
   fetchMocksEpic,
   addMocksEpic,
