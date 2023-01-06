@@ -59,7 +59,7 @@ start: $(REFLEX)
 		--decoration='none' \
 		--regex='\.go$$' \
 		--inverse-regex='^vendor|node_modules|.cache/' \
-		-- go run $(GO_LDFLAGS) -race main.go --log-level=$(LEVEL) --static-files ./build --persistence-directory ./sessions
+		-- go run $(GO_LDFLAGS) -race main.go --log-level=$(LEVEL) --static-files ./build
 
 .PHONY: build
 build:
