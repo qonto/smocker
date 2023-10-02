@@ -65,10 +65,9 @@ async function main() {
   // Screenshot empty + add
   await axios.post(smockerAdminHost + resetPath);
   await page.goto(smockerAdminHost + historyPagePath);
-  await page.waitForSelector("li.ant-menu-item:nth-child(1) > span:nth-child(1)", {
+  await page.waitForSelector(".sidebar .session", {
     visible: true,
   });
-  await page.waitForTimeout(300);
   await screenshotElement({
     page,
     name: "screenshot-sessions.png",
@@ -76,13 +75,15 @@ async function main() {
   });
   await screenshotPage(page, "screenshot-empty-history.png");
   await page.goto(smockerAdminHost + mocksPagePath);
-  await page.waitForSelector("li.ant-menu-item:nth-child(1)", {
+  await page.waitForSelector(".mocks .empty", {
     visible: true,
   });
-  await page.waitForTimeout(300);
   await screenshotPage(page, "screenshot-empty-mocks.png");
   await page.click("button.add-mocks-button");
-  await page.waitForTimeout(300);
+  await page.waitForSelector(".add-mocks-save-button", {
+    visible: true,
+  });
+  await new Promise(r => setTimeout(r, 1000));
   await page.screenshot({ path: screenshotsDir + "screenshot-add-mocks.png" });
   await page.setViewport(defaultViewPort);
 
@@ -91,13 +92,13 @@ async function main() {
     await axios.get(smockerServerHost + "/hello/world"); //ignore legit error
   } catch {}
   await page.goto(smockerAdminHost + historyPagePath);
-  await page.waitForSelector(".history", { visible: true });
-  await page.waitForTimeout(300);
+  await page.waitForSelector(".history .entry", { visible: true });
+  await new Promise(r => setTimeout(r, 1000));
   await screenshotPage(page, "screenshot-history-666.png");
   await screenshotElement({
     page,
     name: "screenshot-hello-world-666.png",
-    selector: ".entry:nth-child(2)",
+    selector: ".entry",
     padding: 5,
   });
 
@@ -106,8 +107,8 @@ async function main() {
     headers: { "Content-Type": "application/x-yaml" },
   });
   await page.goto(smockerAdminHost + mocksPagePath);
-  await page.waitForSelector(".mocks", { visible: true });
-  await page.waitForTimeout(300);
+  await page.waitForSelector(".mocks .mock", { visible: true });
+  await new Promise(r => setTimeout(r, 1000));
   await page.screenshot({ path: screenshotsDir + "screenshot-mocks.png" });
 
   // Screenshot hello-world 200 + 500
@@ -116,20 +117,18 @@ async function main() {
   } catch {}
   await axios.get(smockerServerHost + "/hello/world");
   await page.goto(smockerAdminHost + historyPagePath);
-  await page.waitForSelector(".history", { visible: true });
-  await page.waitForTimeout(300);
+  await page.waitForSelector(".history .entry", { visible: true });
+  await new Promise(r => setTimeout(r, 1000));
   await screenshotPage(page, "screenshot-history.png");
-  await page.waitForTimeout(300);
   await screenshotElement({
     page,
     name: "screenshot-hello-world-200.png",
-    selector: ".entry:nth-child(2)",
+    selector: ".entry",
     padding: 5,
   });
 
   await page.click("button.visualize-button");
-  await page.waitForSelector(".mermaid", { visible: true });
-  await page.waitForTimeout(300);
+  await new Promise(r => setTimeout(r, 5000));
   await screenshotPage(page, "screenshot-history-visualize.png");
 
   await browser.close();
