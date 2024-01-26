@@ -29,9 +29,7 @@
           "$ref": "#/definitions/proxy"
         }
       },
-      "required": [
-        "request"
-      ]
+      "required": ["request"]
     },
     "request": {
       "type": "object",
@@ -169,12 +167,7 @@
       "properties": {
         "engine": {
           "type": "string",
-          "enum": [
-            "go_template",
-            "go_template_yaml",
-            "go_template_json",
-            "lua"
-          ]
+          "enum": ["go_template", "go_template_yaml", "go_template_json", "lua"]
         },
         "script": {
           "type": "string"
@@ -223,6 +216,7 @@
             "ShouldEndWith",
             "ShouldEqual",
             "ShouldEqualJSON",
+            "ShouldEqualXML",
             "ShouldStartWith",
             "ShouldMatch",
             "ShouldNotResemble",
@@ -238,10 +232,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "matcher",
-        "value"
-      ]
+      "required": ["matcher", "value"]
     },
     "headers": {
       "type": "object",
