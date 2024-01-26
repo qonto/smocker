@@ -94,7 +94,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-region: us-east-1 # ECR Public can only be logged into from the us-east-1 region
-          role-to-assume: arn:aws:iam::202662887508:role/ecr-standards-insights
+          role-to-assume: arn:aws:iam::202662887508:role/smocker
           role-session-name: githubActions
 
       - name: Login to Amazon ECR
