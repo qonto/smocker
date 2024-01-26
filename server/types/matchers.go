@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"reflect"
 	"regexp"
+	"strings"
 
+	"github.com/sbabiv/xml2map"
 	log "github.com/sirupsen/logrus"
 	"github.com/smartystreets/assertions"
 	"github.com/stretchr/objx"
@@ -25,6 +28,7 @@ var asserts = map[string]Assertion{
 	"ShouldEndWith":          assertions.ShouldEndWith,
 	"ShouldEqual":            assertions.ShouldEqual,
 	"ShouldEqualJSON":        assertions.ShouldEqualJSON,
+	"ShouldEqualXML":         ShouldEqualXML,
 	"ShouldStartWith":        assertions.ShouldStartWith,
 	"ShouldBeEmpty":          ShouldBeEmpty,
 	"ShouldMatch":            ShouldMatch,
@@ -57,6 +61,93 @@ func ShouldMatch(value interface{}, patterns ...interface{}) string {
 	}
 
 	return ""
+}
+
+func ShouldEqualXML(actual interface{}, expected ...interface{}) string {
+	//Transform string into map
+	decoder := xml2map.NewDecoder(strings.NewReader(expected[0].(string)))
+	exp, err := decoder.Decode()
+	if err != nil {
+		panic(err)
+	}
+
+	decoder = xml2map.NewDecoder(strings.NewReader(actual.(string)))
+	act, err := decoder.Decode()
+	if err != nil {
+		return fmt.Sprintf("error decoding `%s`, err is: %s", actual.(string), err)
+	}
+
+	res := walk(
+		reflect.ValueOf(exp),
+		reflect.ValueOf(act),
+	)
+
+	if !res {
+		return "zob"
+	}
+
+	return ""
+}
+
+func walk(v1, v2 reflect.Value) bool {
+	fmt.Printf("Visiting %v\n", v1)
+	// Indirect through pointers and interfaces
+	for v1.Kind() == reflect.Ptr || v1.Kind() == reflect.Interface {
+		v1 = v1.Elem()
+		v2 = v2.Elem()
+	}
+
+	switch v1.Kind() {
+	case reflect.Array, reflect.Slice:
+		if v1.Kind() != v2.Kind() {
+			return false
+		}
+		if v1.Len() != v2.Len() {
+			return false
+		}
+
+		for i := 0; i < v1.Len(); i++ {
+			ret := walk(v1.Index(i), v2.Index(i))
+			if !ret {
+				return false
+			}
+		}
+	case reflect.Map:
+		if v1.Kind() != v2.Kind() {
+			return false
+		}
+		if v1.Len() != v2.Len() {
+			return false
+		}
+
+		for _, k := range v1.MapKeys() {
+			v := v2.MapIndex(k)
+			if !v.IsValid() {
+				return false
+			}
+
+			ret := walk(v1.MapIndex(k), v2.MapIndex(k))
+			if !ret {
+				return false
+			}
+		}
+	case reflect.String:
+		if v1.String() == "<<IGNORE>>" {
+			return true
+		}
+		if v1.Kind() != v2.Kind() {
+			return false
+		}
+		return v1.String() == v2.String()
+
+	default:
+		if v1.Kind() != v2.Kind() {
+			return false
+		}
+		return v1.String() == v2.String()
+	}
+
+	return true
 }
 
 func ShouldBeEmpty(value interface{}, patterns ...interface{}) string {

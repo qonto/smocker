@@ -1,5 +1,5 @@
 APPNAME=$(shell basename $(shell go list))
-VERSION?=snapshot
+VERSION?=ben
 COMMIT=$(shell git rev-parse --verify HEAD)
 DATE?=$(shell date +%FT%T%z)
 RELEASE?=0
