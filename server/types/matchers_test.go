@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -216,13 +217,13 @@ func Test_walk(t *testing.T) {
 		},
 		{
 			name:     "ok ignore",
-			expected: "<toto><tutu><tata>${xmlunit.ignore}</tata></tutu></toto>",
+			expected: "<toto><tutu><tata>[[IGNORE]]</tata></tutu></toto>",
 			actual:   "<toto><tutu><tata>d</tata></tutu></toto>",
 			want:     true,
 		},
 		{
 			name:     "ok ignore a sub map",
-			expected: "<toto><tutu><tata>${xmlunit.ignore}</tata></tutu></toto>",
+			expected: "<toto><tutu><tata>[[IGNORE]]</tata></tutu></toto>",
 			actual:   "<toto><tutu><tata><a>r</a></tata></tutu></toto>",
 			want:     true,
 		},
@@ -260,6 +261,7 @@ func Test_walk(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			diff := ShouldEqualXML(tt.actual, tt.expected)
+			fmt.Printf("%s\n", diff)
 			got := diff == ""
 			assert.Equal(t, tt.want, got)
 		})

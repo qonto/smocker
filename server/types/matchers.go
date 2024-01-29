@@ -82,14 +82,14 @@ func ShouldEqualXML(actual interface{}, expected ...interface{}) string {
 		reflect.ValueOf(act),
 	)
 
-	if !res {
-		return "zob"
-	}
-
-	return ""
+	return res
 }
 
-func walk(v1, v2 reflect.Value) bool {
+func formatDiff(v1, v2 reflect.Value) string {
+	return fmt.Sprintf("%v is different that %v", v1, v2)
+}
+
+func walk(v1, v2 reflect.Value) string {
 	fmt.Printf("Visiting %v\n", v1)
 	// Indirect through pointers and interfaces
 	for v1.Kind() == reflect.Ptr || v1.Kind() == reflect.Interface {
@@ -100,54 +100,58 @@ func walk(v1, v2 reflect.Value) bool {
 	switch v1.Kind() {
 	case reflect.Array, reflect.Slice:
 		if v1.Kind() != v2.Kind() {
-			return false
+			return formatDiff(v1, v2)
 		}
 		if v1.Len() != v2.Len() {
-			return false
+			return formatDiff(v1, v2)
 		}
 
 		for i := 0; i < v1.Len(); i++ {
 			ret := walk(v1.Index(i), v2.Index(i))
-			if !ret {
-				return false
+			if ret != "" {
+				return formatDiff(v1, v2)
 			}
 		}
 	case reflect.Map:
 		if v1.Kind() != v2.Kind() {
-			return false
+			return formatDiff(v1, v2)
 		}
 		if v1.Len() != v2.Len() {
-			return false
+			return formatDiff(v1, v2)
 		}
 
 		for _, k := range v1.MapKeys() {
 			v := v2.MapIndex(k)
 			if !v.IsValid() {
-				return false
+				return formatDiff(v1, v2)
 			}
 
 			ret := walk(v1.MapIndex(k), v2.MapIndex(k))
-			if !ret {
-				return false
+			if ret != "" {
+				return formatDiff(v1, v2)
 			}
 		}
 	case reflect.String:
-		if v1.String() == "<<IGNORE>>" {
-			return true
+		if v1.String() == "[[IGNORE]]" {
+			return ""
 		}
 		if v1.Kind() != v2.Kind() {
-			return false
+			return formatDiff(v1, v2)
 		}
-		return v1.String() == v2.String()
+		if v1.String() != v2.String() {
+			return formatDiff(v1, v2)
+		}
 
 	default:
 		if v1.Kind() != v2.Kind() {
-			return false
+			return formatDiff(v1, v2)
 		}
-		return v1.String() == v2.String()
+		if v1.String() != v2.String() {
+			return formatDiff(v1, v2)
+		}
 	}
 
-	return true
+	return ""
 }
 
 func ShouldBeEmpty(value interface{}, patterns ...interface{}) string {
