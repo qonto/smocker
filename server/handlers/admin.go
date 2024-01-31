@@ -71,14 +71,18 @@ func (a *Admin) AddMocks(c echo.Context) error {
 		}
 	}
 
+	IDs := make([]string, 0, len(mocks))
 	for _, mock := range mocks {
-		if _, err := a.mocksServices.AddMock(sessionID, mock); err != nil {
+		newMock, err := a.mocksServices.AddMock(sessionID, mock)
+		if err != nil {
 			return echo.NewHTTPError(http.StatusNotFound, err.Error())
 		}
+		IDs = append(IDs, newMock.State.ID)
 	}
 
 	return c.JSON(http.StatusOK, echo.Map{
 		"message": "Mocks registered successfully",
+		"ids":     IDs,
 	})
 }
 
