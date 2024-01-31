@@ -109,7 +109,7 @@ jobs:
       - name: Build
         env:
           ECR_REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
-          ECR_REPOSITORY: smocker
+          ECR_REPOSITORY: qonto/smocker
           IMAGE_TAG: ben
         run: |
           make VERSION=${{ steps.extract_ref.outputs.GIT_REF }} RELEASE=1 release
