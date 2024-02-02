@@ -2,6 +2,8 @@ package services
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"regexp"
 	"strings"
 	"sync"
@@ -9,6 +11,7 @@ import (
 
 	"github.com/Thiht/smocker/server/types"
 	"github.com/teris-io/shortid"
+	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -18,6 +21,7 @@ var (
 
 type Mocks interface {
 	AddMock(sessionID string, mock *types.Mock) (*types.Mock, error)
+	LoadInitializationFile(string) error
 	GetMocks(sessionID string) (types.Mocks, error)
 	GetMockByID(sessionID, id string) (*types.Mock, error)
 	LockMocks(ids []string) types.Mocks
@@ -51,6 +55,40 @@ func NewMocks(sessions types.Sessions, historyRetention int, persistence Persist
 		s.sessions = sessions
 	}
 	return s
+}
+
+func (s *mocks) LoadInitializationFile(filePath string) error {
+	mocksFile, err := os.Open(filePath)
+	if err != nil {
+		return err
+	}
+	defer mocksFile.Close()
+	bytes, err := io.ReadAll(mocksFile)
+	if err != nil {
+		return err
+	}
+	var mocks types.Mocks
+	err = yaml.Unmarshal(bytes, &mocks)
+	if err != nil {
+		return err
+	}
+
+	session := s.GetLastSession()
+	newMockIDS := []string{}
+
+	// mocks are stored as a stack so we need to reverse the list from mocks file
+	for i := len(mocks) - 1; i >= 0; i-- {
+		mock, err := s.AddMock(session.ID, mocks[i])
+		if err != nil {
+			return err
+		}
+		newMockIDS = append(newMockIDS, mock.State.ID)
+
+	}
+
+	s.LockMocks(newMockIDS)
+
+	return nil
 }
 
 func (s *mocks) AddMock(sessionID string, newMock *types.Mock) (*types.Mock, error) {
