@@ -18,14 +18,7 @@ func NewMockServer(cfg config.Config) (*http.Server, services.Mocks) {
 	if err != nil {
 		log.Error("Unable to load sessions: ", err)
 	}
-	mockServices := services.NewMocks(sessions, cfg.HistoryMaxRetention, persistence)
-
-	if cfg.InitFilePath != "" {
-		err = mockServices.LoadInitializationFile(cfg.InitFilePath)
-		if err != nil {
-			log.Error("Unable to load intialization file: ", err)
-		}
-	}
+	mockServices := services.NewMocks(sessions, cfg.HistoryMaxRetention, persistence, cfg.InitFilePath)
 
 	mockServerEngine.HideBanner = true
 	mockServerEngine.HidePort = true

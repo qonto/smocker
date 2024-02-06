@@ -21,7 +21,6 @@ var (
 
 type Mocks interface {
 	AddMock(sessionID string, mock *types.Mock) (*types.Mock, error)
-	LoadInitializationFile(string) error
 	GetMocks(sessionID string) (types.Mocks, error)
 	GetMockByID(sessionID, id string) (*types.Mock, error)
 	LockMocks(ids []string) types.Mocks
@@ -43,13 +42,15 @@ type mocks struct {
 	mu               sync.Mutex
 	historyRetention int
 	persistence      Persistence
+	initFilePath     string
 }
 
-func NewMocks(sessions types.Sessions, historyRetention int, persistence Persistence) Mocks {
+func NewMocks(sessions types.Sessions, historyRetention int, persistence Persistence, initFilePath string) Mocks {
 	s := &mocks{
 		sessions:         types.Sessions{},
 		historyRetention: historyRetention,
 		persistence:      persistence,
+		initFilePath:     initFilePath,
 	}
 	if sessions != nil {
 		s.sessions = sessions
@@ -57,38 +58,31 @@ func NewMocks(sessions types.Sessions, historyRetention int, persistence Persist
 	return s
 }
 
-func (s *mocks) LoadInitializationFile(filePath string) error {
+func (s *mocks) GetMocksFromInitializationFile(filePath string) (*types.Mocks, error) {
 	mocksFile, err := os.Open(filePath)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer mocksFile.Close()
 	bytes, err := io.ReadAll(mocksFile)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	var mocks types.Mocks
 	err = yaml.Unmarshal(bytes, &mocks)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	session := s.GetLastSession()
-	newMockIDS := []string{}
-
+	var ret types.Mocks
 	// mocks are stored as a stack so we need to reverse the list from mocks file
 	for i := len(mocks) - 1; i >= 0; i-- {
-		mock, err := s.AddMock(session.ID, mocks[i])
-		if err != nil {
-			return err
-		}
-		newMockIDS = append(newMockIDS, mock.State.ID)
-
+		m := mocks[i]
+		m.Init()
+		ret = append(ret, m)
 	}
 
-	s.LockMocks(newMockIDS)
-
-	return nil
+	return &ret, nil
 }
 
 func (s *mocks) AddMock(sessionID string, newMock *types.Mock) (*types.Mock, error) {
@@ -246,6 +240,18 @@ func (s *mocks) NewSession(name string) *types.Session {
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
+	if s.initFilePath != "" {
+		fmt.Printf("Init\n\n")
+
+		initMocks, err := s.GetMocksFromInitializationFile(s.initFilePath)
+		if err != nil {
+			fmt.Printf("Error is: %s\n\n", err)
+			return nil
+		}
+
+		mocks = append(*initMocks, mocks...)
+	}
 
 	session := &types.Session{
 		ID:      shortid.MustGenerate(),
