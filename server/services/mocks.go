@@ -242,7 +242,7 @@ func (s *mocks) NewSession(name string) *types.Session {
 	defer s.mu.Unlock()
 
 	if s.initFilePath != "" {
-		fmt.Printf("Init\n\n")
+		fmt.Printf("Init\n\ns.initFilePath: %s\n", s.initFilePath)
 
 		initMocks, err := s.GetMocksFromInitializationFile(s.initFilePath)
 		if err != nil {
