@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"sync"
@@ -42,15 +43,17 @@ type mocks struct {
 	mu               sync.Mutex
 	historyRetention int
 	persistence      Persistence
-	initFilePath     string
+	initFile         string
+	initFolder       string
 }
 
-func NewMocks(sessions types.Sessions, historyRetention int, persistence Persistence, initFilePath string) Mocks {
+func NewMocks(sessions types.Sessions, historyRetention int, persistence Persistence, initFolder string, initFilePath string) Mocks {
 	s := &mocks{
 		sessions:         types.Sessions{},
 		historyRetention: historyRetention,
 		persistence:      persistence,
-		initFilePath:     initFilePath,
+		initFile:         initFilePath,
+		initFolder:       initFolder,
 	}
 	if sessions != nil {
 		s.sessions = sessions
@@ -58,7 +61,8 @@ func NewMocks(sessions types.Sessions, historyRetention int, persistence Persist
 	return s
 }
 
-func (s *mocks) GetMocksFromInitializationFile(filePath string) (*types.Mocks, error) {
+func (s *mocks) GetMocksFromInitializationFile(folder, file string) (*types.Mocks, error) {
+	filePath := filepath.Join(folder, file)
 	mocksFile, err := os.Open(filePath)
 	if err != nil {
 		return nil, err
@@ -241,10 +245,11 @@ func (s *mocks) NewSession(name string) *types.Session {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if s.initFilePath != "" {
-		fmt.Printf("Init\n\ns.initFilePath: %s\n", s.initFilePath)
+	if s.initFile != "" {
+		fmt.Printf("Init\n\ns.initFile: %s\n", s.initFile)
+		fmt.Printf("Init\n\ns.initFolder: %s\n", s.initFolder)
 
-		initMocks, err := s.GetMocksFromInitializationFile(s.initFilePath)
+		initMocks, err := s.GetMocksFromInitializationFile(s.initFolder, s.initFile)
 		if err != nil {
 			fmt.Printf("Error is: %s\n\n", err)
 			return nil
