@@ -138,7 +138,11 @@ const SideBar = ({
         align="middle"
         title={session.name || session.id}
       >
-        <Typography.Text ellipsis className="session-name">
+        <Typography.Text
+          ellipsis
+          className="session-name"
+          style={{ fontSize: "10px" }}
+        >
           {session.name || session.id}
         </Typography.Text>
         <EditableItem
@@ -203,6 +207,7 @@ const SideBar = ({
       defaultCollapsed
       breakpoint="xl"
       collapsedWidth="0"
+      width="300px"
       theme="light"
       onCollapse={onCollapse}
     >

@@ -246,9 +246,6 @@ func (s *mocks) NewSession(name string) *types.Session {
 	defer s.mu.Unlock()
 
 	if s.initFile != "" {
-		fmt.Printf("Init\n\ns.initFile: %s\n", s.initFile)
-		fmt.Printf("Init\n\ns.initFolder: %s\n", s.initFolder)
-
 		initMocks, err := s.GetMocksFromInitializationFile(s.initFolder, s.initFile)
 		if err != nil {
 			fmt.Printf("Error is: %s\n\n", err)
