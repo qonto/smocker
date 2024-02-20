@@ -110,7 +110,7 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
           ECR_REPOSITORY: qonto/smocker
-          IMAGE_TAG: ben
+          IMAGE_TAG: $GITHUB_REF_NAME
         run: |
           make VERSION=${{ steps.extract_ref.outputs.GIT_REF }} RELEASE=1 release
 
